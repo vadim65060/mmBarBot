@@ -1,14 +1,17 @@
-from aiogram.filters import CommandStart
+from datetime import datetime
+
+from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
-from aiogram import F
 
 import Callbacks
 import markups
 import texts
-from bot_create import bot, dp
+from bot_create import bot, dp, config
 from states import CocktailStates
-from Config import config
+
+now = datetime.now()
+log = open(now.strftime("%d-%m-%y--%H-%M") + '.log', 'w')
 
 
 @dp.message(F.text == 'отмена')
@@ -72,7 +75,8 @@ async def issuance_cocktail(callback: CallbackQuery):
 
 @dp.callback_query(Callbacks.YesNoCallback.filter((F.payload == 'cocktail') & (F.yes == 'yes')))
 async def issuance_yes(callback: CallbackQuery):
-    await callback.message.delete_reply_markup()
+    log.write(callback.message.text.partition('\n')[0][9:] + '\n')
+    await callback.message.delete()
 
 
 @dp.callback_query(Callbacks.YesNoCallback.filter((F.payload == 'cocktail') & (F.yes == 'no')))
@@ -82,5 +86,5 @@ async def issuance_no(callback: CallbackQuery):
 
 @dp.message(F.text == '/setchat')
 async def set_cocktail_request_chat(message: Message):
-    config.request_chat = message.chat.id
+    config.update_request_chat(message.chat.id)
     await message.answer('чат выдачи установлен')
